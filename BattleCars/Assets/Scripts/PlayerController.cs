@@ -45,7 +45,7 @@ public class PlayerController : MonoBehaviour {
     private void Move() {
         steeringInput = Mathf.Clamp(steeringInput, -1, 1);
         acceleratorInput = Mathf.Clamp(acceleratorInput, 0, 1);
-        brakingInput = Mathf.Clamp(brakingInput, 0, 1);
+        brakingInput = -1 * Mathf.Clamp(brakingInput, -1, 0);
 
         steeringAngle = steeringInput * maxSteeringAngle;
         wheelColliders[0].steerAngle = steeringAngle;
@@ -55,12 +55,17 @@ public class PlayerController : MonoBehaviour {
     }
 
     private void Drive() {
-        float torqueForward = acceleratorInput * (currentTorque / 4.0f);
+        float torqueForward = acceleratorInput * currentTorque;
         for (int i = 0; i < 4; i++)
         {
             wheelColliders[i].motorTorque = torqueForward;
             if (currentSpeed > 5 && Vector3.Angle(transform.forward, rigidbodyUseThis.velocity) < 50f)
                 wheelColliders[i].brakeTorque = brakeTorque * brakingInput;
+            else if (brakingInput > 0)
+            {
+                wheelColliders[i].brakeTorque = 0.0f;
+                wheelColliders[i].motorTorque = brakingInput * brakeTorque;
+            }
         }
         if (currentSpeed >= topSpeed)
             rigidbodyUseThis.velocity = topSpeed * rigidbodyUseThis.velocity.normalized;
