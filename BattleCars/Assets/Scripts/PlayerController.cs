@@ -4,10 +4,12 @@ using System;
 
 public class PlayerController : MonoBehaviour {
     [SerializeField] float maxTorque;
+    [SerializeField] float brakeTorque;
     [SerializeField] float topSpeed;
-    [SerializeField] WheelCollider [] wheelColliders;
+    [SerializeField] float downforce;
     [SerializeField] int playerNumber = 1;
     [SerializeField] float maxSteeringAngle = 45;
+    [SerializeField] WheelCollider [] wheelColliders;
     Rigidbody rigidbodyUseThis;
     float acceleratorInput;
     float steeringInput;
@@ -18,7 +20,7 @@ public class PlayerController : MonoBehaviour {
     float currentSpeed;
     float steeringAngle;
     float currentTorque;
-    private float brakeTorque;
+
 
     // Use this for initialization
     void Start () {
@@ -39,13 +41,19 @@ public class PlayerController : MonoBehaviour {
 
     void FixedUpdate() {
         Move();
+        UpdateDownforce();
+
     }
-    
+
+    private void UpdateDownforce() {
+        for (int i = 0; i < wheelColliders.Length; i++)
+            wheelColliders[i].attachedRigidbody.AddForce(-transform.up * downforce * wheelColliders[i].attachedRigidbody.velocity.magnitude);
+    }
 
     private void Move() {
         steeringInput = Mathf.Clamp(steeringInput, -1, 1);
         acceleratorInput = Mathf.Clamp(acceleratorInput, 0, 1);
-        brakingInput = -1 * Mathf.Clamp(brakingInput, -1, 0);
+        brakingInput = Mathf.Clamp(brakingInput, -1, 0);
 
         steeringAngle = steeringInput * maxSteeringAngle;
         wheelColliders[0].steerAngle = steeringAngle;
@@ -59,12 +67,12 @@ public class PlayerController : MonoBehaviour {
         for (int i = 0; i < 4; i++)
         {
             wheelColliders[i].motorTorque = torqueForward;
-            if (currentSpeed > 5 && Vector3.Angle(transform.forward, rigidbodyUseThis.velocity) < 50f)
+            if (Math.Sign(rigidbodyUseThis.transform.InverseTransformDirection(rigidbodyUseThis.velocity).z) == Math.Sign(brakingInput))
                 wheelColliders[i].brakeTorque = brakeTorque * brakingInput;
             else if (brakingInput > 0)
             {
-                wheelColliders[i].brakeTorque = 0.0f;
-                wheelColliders[i].motorTorque = brakingInput * brakeTorque;
+                wheelColliders[i].brakeTorque = brakingInput * brakeTorque;
+                wheelColliders[i].motorTorque = 0.0f;
             }
         }
         if (currentSpeed >= topSpeed)
