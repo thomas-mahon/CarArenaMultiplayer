@@ -8,8 +8,7 @@ public class CarController : MonoBehaviour {
     [SerializeField]
     float maxSteeringAngle = 40f;
     [SerializeField]
-    AnimationCurve torqueCurveModifier =
-        new AnimationCurve(new Keyframe(0, 1), new Keyframe(200, 0.25f));
+    float maxSpeed;
     [SerializeField]
     float maxMotorTorque = 500f;
     [SerializeField]
@@ -38,6 +37,14 @@ public class CarController : MonoBehaviour {
     WheelCollider[] wheelsAll;
     [SerializeField]
     GameObject[] wheelMeshes;
+    [SerializeField]
+    float powerUpMaxTorque;
+    [SerializeField]
+    float powerUpTime;
+    [SerializeField]
+    float maxAccelerationHelperVelocity;
+    [SerializeField]
+    float accelerationHelperIncriment = -5f;
     #endregion
 
     #region Private variables
@@ -49,6 +56,8 @@ public class CarController : MonoBehaviour {
     float currentRotation;
     float currentTorque;
     float tireSidewaysStiffnessDefault;
+    AnimationCurve torqueCurveModifier;
+    bool isTorquePowerupActive;
 
     #endregion
 
@@ -63,6 +72,7 @@ public class CarController : MonoBehaviour {
         catch (Exception) { throw new Exception("SimpleCarController must be attached to a GameObject with a Rigidbody component."); }
         rigidBody.centerOfMass = new Vector3(transform.position.x, centerOfMassOffset, transform.position.z);
         tireSidewaysStiffnessDefault = wheelsAll[0].sidewaysFriction.stiffness;
+        torqueCurveModifier = new AnimationCurve(new Keyframe(0, 1), new Keyframe(maxSpeed, 0.25f));
         //for (int i = 0; i < wheelsAll.Length; i++)
         //{
         //    wheelsAll[i].suspensionDistance = rideHeight;
@@ -84,6 +94,15 @@ public class CarController : MonoBehaviour {
         UpdateBrakeTorque();
         FixWheelMeshesToColliders();
         Drive();
+        AccelerationHelper();
+    }
+
+    private void AccelerationHelper()
+    {
+        if (ForwardVelocity <= maxAccelerationHelperVelocity)
+        {
+            rigidBody.AddForce(rigidBody.transform.InverseTransformDirection(rigidBody.velocity) * accelerationHelperIncriment);
+        }
     }
 
     private void Turn() {
@@ -128,7 +147,11 @@ public class CarController : MonoBehaviour {
     private void UpdateMotorTorque() {
 
         float curveMod = torqueCurveModifier.Evaluate(rigidBody.velocity.magnitude);
-        currentTorque = driveInput * maxMotorTorque * curveMod;
+        if (isTorquePowerupActive)
+            currentTorque = driveInput * powerUpMaxTorque * curveMod;
+        else
+            currentTorque = driveInput * maxMotorTorque * curveMod;
+
         
     }
     
@@ -200,5 +223,17 @@ public class CarController : MonoBehaviour {
         steeringInput = Input.GetAxis("Horizontal");
         driveInput = Input.GetAxis("Gas1");
         brakeInput = Input.GetAxis("Brakes1");
+    }
+
+    void PowerUpTorque()
+    {
+        StartCoroutine(TorqueIncreasePowerUp());
+    }
+
+    private IEnumerator TorqueIncreasePowerUp()
+    {
+        isTorquePowerupActive = true;
+        yield return new WaitForSeconds(powerUpTime);
+        isTorquePowerupActive = false;
     }
 }
