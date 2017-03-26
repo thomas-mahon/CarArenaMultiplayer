@@ -18,7 +18,7 @@ public class CarController : MonoBehaviour {
     [Range(0, 1)] [SerializeField]
     float steeringAssistance;
     [SerializeField]
-    float centerOfMassOffset = -0.2f;
+    Vector3 centerOfMassOffset;
     [Range(0, 1)] [SerializeField]
     float tractionControlAdjustmentAmount = 1f;
     [SerializeField]
@@ -45,6 +45,12 @@ public class CarController : MonoBehaviour {
     float maxAccelerationHelperVelocity;
     [SerializeField]
     float accelerationHelperIncriment = -5f;
+    [SerializeField]
+    RocketSimple rocketSimplePrefab;
+    [SerializeField]
+    GameObject basicMinigun;
+    [SerializeField]
+    Vector3 rocketOffset;
     #endregion
 
     #region Private variables
@@ -58,21 +64,53 @@ public class CarController : MonoBehaviour {
     float tireSidewaysStiffnessDefault;
     AnimationCurve torqueCurveModifier;
     bool isTorquePowerupActive;
-
+    GameObject activeWeapon;
     #endregion
 
     #region Private properties
     private float ForwardVelocity{get { return rigidBody.transform.InverseTransformDirection(rigidBody.velocity).z;}}
     private bool IsMovingForward{get { return ForwardVelocity > 0;}}
+    //private bool IsRocketAttached { get { return GetComponentInChildren<SkinnedMeshRenderer>().enabled;}}
     #endregion
+
+    public int PlayerNumber = 1;
+
+    public void AddWeapon(WeaponType weapon) {
+        switch (weapon)
+        {
+            case WeaponType.Rocket:
+                activeWeapon = Instantiate(rocketSimplePrefab, transform, false) as GameObject;
+                if (activeWeapon.GetComponent<RocketSimple>())
+                {
+                    rigidBody.centerOfMass = new Vector3(rocketOffset.x, centerOfMassOffset.y, centerOfMassOffset.z);
+                    rigidBody.mass += 2000f;
+                }
+                break;
+            case WeaponType.Laser:
+                break;
+            case WeaponType.Minigun:
+                break;
+            default:
+                break;
+        }
+        StartCoroutine(DestroyWeapon(3f, activeWeapon));
+    }
+
+    private IEnumerator DestroyWeapon(float timeToWait, GameObject activeWeapon) {
+        yield return new WaitForSeconds(timeToWait);
+        Destroy(activeWeapon.GetComponent<Transform>().gameObject);
+        Debug.Log("Did it work?");
+        yield return null;
+    }
 
     void Start() {
 
         try { rigidBody = GetComponent<Rigidbody>(); }
-        catch (Exception) { throw new Exception("SimpleCarController must be attached to a GameObject with a Rigidbody component."); }
-        rigidBody.centerOfMass = new Vector3(transform.position.x, centerOfMassOffset, transform.position.z);
+        catch (Exception) { throw new Exception("CarController must be attached to a GameObject with a Rigidbody component."); }
+        rigidBody.centerOfMass = centerOfMassOffset;
         tireSidewaysStiffnessDefault = wheelsAll[0].sidewaysFriction.stiffness;
         torqueCurveModifier = new AnimationCurve(new Keyframe(0, 1), new Keyframe(maxSpeed, 0.25f));
+        activeWeapon = Instantiate(basicMinigun, transform, false) as GameObject;
         //for (int i = 0; i < wheelsAll.Length; i++)
         //{
         //    wheelsAll[i].suspensionDistance = rideHeight;
