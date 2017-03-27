@@ -48,6 +48,8 @@ public class CarController : MonoBehaviour {
     [SerializeField]
     RocketSimple rocketSimplePrefab;
     [SerializeField]
+    RocketTargetted rocketTargettedPrefab;
+    [SerializeField]
     GameObject basicMinigun;
     [SerializeField]
     Vector3 rocketOffset;
@@ -64,7 +66,8 @@ public class CarController : MonoBehaviour {
     float tireSidewaysStiffnessDefault;
     AnimationCurve torqueCurveModifier;
     bool isTorquePowerupActive;
-    GameObject activeWeapon;
+    float startingMass;
+    GameObject activeWeapon = null;
     #endregion
 
     #region Private properties
@@ -75,34 +78,6 @@ public class CarController : MonoBehaviour {
 
     public int PlayerNumber = 1;
 
-    public void AddWeapon(WeaponType weapon) {
-        switch (weapon)
-        {
-            case WeaponType.Rocket:
-                activeWeapon = Instantiate(rocketSimplePrefab, transform, false) as GameObject;
-                if (activeWeapon.GetComponent<RocketSimple>())
-                {
-                    rigidBody.centerOfMass = new Vector3(rocketOffset.x, centerOfMassOffset.y, centerOfMassOffset.z);
-                    rigidBody.mass += 2000f;
-                }
-                break;
-            case WeaponType.Laser:
-                break;
-            case WeaponType.Minigun:
-                break;
-            default:
-                break;
-        }
-        StartCoroutine(DestroyWeapon(3f, activeWeapon));
-    }
-
-    private IEnumerator DestroyWeapon(float timeToWait, GameObject activeWeapon) {
-        yield return new WaitForSeconds(timeToWait);
-        Destroy(activeWeapon.GetComponent<Transform>().gameObject);
-        Debug.Log("Did it work?");
-        yield return null;
-    }
-
     void Start() {
 
         try { rigidBody = GetComponent<Rigidbody>(); }
@@ -110,7 +85,7 @@ public class CarController : MonoBehaviour {
         rigidBody.centerOfMass = centerOfMassOffset;
         tireSidewaysStiffnessDefault = wheelsAll[0].sidewaysFriction.stiffness;
         torqueCurveModifier = new AnimationCurve(new Keyframe(0, 1), new Keyframe(maxSpeed, 0.25f));
-        activeWeapon = Instantiate(basicMinigun, transform, false) as GameObject;
+        startingMass = rigidBody.mass;
         //for (int i = 0; i < wheelsAll.Length; i++)
         //{
         //    wheelsAll[i].suspensionDistance = rideHeight;
@@ -133,8 +108,10 @@ public class CarController : MonoBehaviour {
         FixWheelMeshesToColliders();
         Drive();
         AccelerationHelper();
+        if (activeWeapon == null)
+            rigidBody.mass = startingMass;
     }
-
+    #region Driving Mechanics
     private void AccelerationHelper()
     {
         if (ForwardVelocity <= maxAccelerationHelperVelocity)
@@ -255,6 +232,11 @@ public class CarController : MonoBehaviour {
             //wheelsUsedForDriving[i].brakeTorque = brakeInput < 0 ? brakeInput * brakeTorque : 0.0f;
         }
     }
+
+    void PowerUpTorque()
+    {
+        StartCoroutine(TorqueIncreasePowerUp());
+    }
     #endregion
 
     void GetInput() {
@@ -263,15 +245,41 @@ public class CarController : MonoBehaviour {
         brakeInput = Input.GetAxis("Brakes1");
     }
 
-    void PowerUpTorque()
-    {
-        StartCoroutine(TorqueIncreasePowerUp());
-    }
-
     private IEnumerator TorqueIncreasePowerUp()
     {
         isTorquePowerupActive = true;
         yield return new WaitForSeconds(powerUpTime);
         isTorquePowerupActive = false;
     }
+
+    public void AddWeapon(WeaponType weapon) {
+        if (activeWeapon == null)
+        {
+            switch (weapon)
+            {
+                case WeaponType.Rocket:
+                     activeWeapon = Instantiate(rocketSimplePrefab, transform, false) as GameObject;
+                    rigidBody.centerOfMass = new Vector3(rocketOffset.x, centerOfMassOffset.y, centerOfMassOffset.z);
+                    rigidBody.mass += 2000f;
+                    break;
+                case WeaponType.Laser:
+                    activeWeapon = basicMinigun;
+                    break;
+                case WeaponType.Minigun:
+                    activeWeapon = basicMinigun;
+                    break;
+                case WeaponType.TargettedRocket:
+                    activeWeapon = Instantiate(rocketTargettedPrefab, transform, false) as GameObject;
+                    rigidBody.mass += 4000f;
+                    break;
+                default:
+                    activeWeapon = basicMinigun;
+                    break;
+            }
+
+        }
+        
+    }
+    #endregion
+
 }

@@ -1,9 +1,7 @@
 ﻿using UnityEngine;
 using System.Collections;
 
-public enum WeaponType {
-Rocket, Laser, Minigun
-};
+
 
 
 public interface IDoDamage{

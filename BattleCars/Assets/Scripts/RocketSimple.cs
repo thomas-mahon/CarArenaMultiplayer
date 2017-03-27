@@ -1,15 +1,20 @@
 ﻿using UnityEngine;
 using System.Collections;
+using System;
 
 public class RocketSimple : MonoBehaviour {
+    [SerializeField]
+    float destructTimer;
 
-	// Use this for initialization
-	void Start () {
-	
-	}
-	
-	// Update is called once per frame
-	void Update () {
-	
-	}
+
+    void Awake() {
+        StartCoroutine(DestroySelf(destructTimer));
+    }
+
+    private IEnumerator DestroySelf(float destructTimer) {
+        yield return new WaitForSeconds(destructTimer);
+
+        Destroy(gameObject);
+    }
+
 }
