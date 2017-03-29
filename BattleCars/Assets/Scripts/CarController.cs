@@ -67,12 +67,14 @@ public class CarController : MonoBehaviour {
     AnimationCurve torqueCurveModifier;
     bool isTorquePowerupActive;
     float startingMass;
-    GameObject activeWeapon = null;
+    GameObject activeWeapon;
+    int childObjectCountWithoutWeapon;
     #endregion
 
     #region Private properties
-    private float ForwardVelocity{get { return rigidBody.transform.InverseTransformDirection(rigidBody.velocity).z;}}
-    private bool IsMovingForward{get { return ForwardVelocity > 0;}}
+    bool hasWeapon{ get { return childObjectCountWithoutWeapon < transform.childCount ? true : false; } }
+    private float ForwardVelocity{ get { return rigidBody.transform.InverseTransformDirection(rigidBody.velocity).z; } }
+    private bool IsMovingForward{ get { return ForwardVelocity > 0; } }
     //private bool IsRocketAttached { get { return GetComponentInChildren<SkinnedMeshRenderer>().enabled;}}
     #endregion
 
@@ -86,6 +88,7 @@ public class CarController : MonoBehaviour {
         tireSidewaysStiffnessDefault = wheelsAll[0].sidewaysFriction.stiffness;
         torqueCurveModifier = new AnimationCurve(new Keyframe(0, 1), new Keyframe(maxSpeed, 0.25f));
         startingMass = rigidBody.mass;
+        childObjectCountWithoutWeapon = transform.childCount;
         //for (int i = 0; i < wheelsAll.Length; i++)
         //{
         //    wheelsAll[i].suspensionDistance = rideHeight;
@@ -108,7 +111,7 @@ public class CarController : MonoBehaviour {
         FixWheelMeshesToColliders();
         Drive();
         AccelerationHelper();
-        if (activeWeapon == null)
+        if (!hasWeapon)
             rigidBody.mass = startingMass;
     }
     #region Driving Mechanics
@@ -253,12 +256,11 @@ public class CarController : MonoBehaviour {
     }
 
     public void AddWeapon(WeaponType weapon) {
-        if (activeWeapon == null)
-        {
+        if (!hasWeapon)
             switch (weapon)
             {
                 case WeaponType.Rocket:
-                     activeWeapon = Instantiate(rocketSimplePrefab, transform, false) as GameObject;
+                        activeWeapon = Instantiate(rocketSimplePrefab, transform, false) as GameObject;
                     rigidBody.centerOfMass = new Vector3(rocketOffset.x, centerOfMassOffset.y, centerOfMassOffset.z);
                     rigidBody.mass += 2000f;
                     break;
@@ -276,9 +278,6 @@ public class CarController : MonoBehaviour {
                     activeWeapon = basicMinigun;
                     break;
             }
-
-        }
-        
     }
     #endregion
 

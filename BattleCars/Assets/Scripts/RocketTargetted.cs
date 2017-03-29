@@ -4,7 +4,9 @@ using System.Collections.Generic;
 using System;
 using UnityEngine.UI;
 
-public class RocketTargetted : MonoBehaviour {
+public class RocketTargetted : MonoBehaviour, IWeapon {
+    [SerializeField]
+    int damage;
     [SerializeField]
     float maxRange;
     [SerializeField]
@@ -25,6 +27,11 @@ public class RocketTargetted : MonoBehaviour {
     Transform target = null;
     bool targetLocated = false;
     bool targetIsInRange { get { return ((target.position - transform.position).magnitude <= maxRange); } }
+
+    public int Damage {get{ return damage;}}
+    public float LifeSpan {get{ return lifeSpan;}}
+    public bool IsActive { get { return isActiveAndEnabled;} }
+
     bool isTargettingLeft;
     bool isShooting;
     bool isTargettingRight;
@@ -36,7 +43,7 @@ public class RocketTargetted : MonoBehaviour {
         SetTargetToPrimary();
         if (target != null)
             SetReticleToTarget();
-        StartCoroutine(DestroySelf(lifeSpan));
+        StartCoroutine(GetComponent<IWeapon>().DestroySelf(lifeSpan));
 	}
 
     private void SetReticleToTarget() {
@@ -62,9 +69,9 @@ public class RocketTargetted : MonoBehaviour {
         isShooting = Input.GetButtonDown(shootButton);
     }
 
-    private IEnumerator DestroySelf(float destructTimer) {
+    IEnumerator IWeapon.DestroySelf(float destructTimer) {
         yield return new WaitForSeconds(destructTimer);
-
+        
         Destroy(gameObject);
     }
 
@@ -131,4 +138,5 @@ public class RocketTargetted : MonoBehaviour {
         }
 
     }
+    
 }

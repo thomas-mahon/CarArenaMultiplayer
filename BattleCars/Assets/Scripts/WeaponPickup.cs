@@ -14,6 +14,7 @@ public class WeaponPickup : MonoBehaviour {
         {
             coll.GetComponentInParent<CarController>().AddWeapon(weaponType);
             hasWeapon = false;
+            Destroy(gameObject);
         }
     }
 }
