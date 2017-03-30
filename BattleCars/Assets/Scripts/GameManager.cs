@@ -1,19 +1,28 @@
 ﻿using UnityEngine;
 using System.Collections;
 using System.Collections.Generic;
+using UnityEngine.UI;
 
-    public enum WeaponType {
+public enum WeaponType {
         Rocket, Laser, Minigun, TargettedRocket
     };
 public class GameManager : MonoBehaviour {
+
+
+
     public List<Transform> PlayersInRound = new List<Transform>();
-	// Use this for initialization
-	void Start () {
+
+    [SerializeField]
+    Slider[] playerHealthSliders;
 	
-	}
-	
+
+    //TODO: Implement Observer pattern for slider value management
+
 	// Update is called once per frame
 	void Update () {
-	
+        foreach (Transform playerTransform in PlayersInRound)
+        {
+            playerHealthSliders[playerTransform.gameObject.GetComponent<CarController>().PlayerNumber -1].value = playerTransform.gameObject.GetComponent<PlayerHealth>().CurrentHealth;
+        }
 	}
 }

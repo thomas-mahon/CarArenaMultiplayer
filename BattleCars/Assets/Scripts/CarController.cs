@@ -4,7 +4,8 @@ using System;
 
 public class CarController : MonoBehaviour {
     #region SerializedFields
-
+    //[SerializeField]
+    //ObserverEventHandler observerEventHandler;
     [SerializeField]
     float maxSteeringAngle = 40f;
     [SerializeField]
@@ -53,6 +54,8 @@ public class CarController : MonoBehaviour {
     GameObject basicMinigun;
     [SerializeField]
     Vector3 rocketOffset;
+    [SerializeField]
+    private float deathTime = 3f;
     #endregion
 
     #region Private variables
@@ -69,6 +72,7 @@ public class CarController : MonoBehaviour {
     float startingMass;
     GameObject activeWeapon;
     int childObjectCountWithoutWeapon;
+    bool canDrive;
     #endregion
 
     #region Private properties
@@ -89,6 +93,7 @@ public class CarController : MonoBehaviour {
         torqueCurveModifier = new AnimationCurve(new Keyframe(0, 1), new Keyframe(maxSpeed, 0.25f));
         startingMass = rigidBody.mass;
         childObjectCountWithoutWeapon = transform.childCount;
+        canDrive = true;
         //for (int i = 0; i < wheelsAll.Length; i++)
         //{
         //    wheelsAll[i].suspensionDistance = rideHeight;
@@ -109,10 +114,20 @@ public class CarController : MonoBehaviour {
         UpdateDownforce();
         UpdateBrakeTorque();
         FixWheelMeshesToColliders();
-        Drive();
+        if (canDrive)
+            Drive();
         AccelerationHelper();
         if (!hasWeapon)
             rigidBody.mass = startingMass;
+        CheckRollOver();
+    }
+
+    private void CheckRollOver() {
+        Quaternion normalRotation = new Quaternion(0,0,0,0);
+        if (transform.rotation.x > normalRotation.x + 135)
+        {
+            DieAndRespawnAtLocation();
+        }
     }
     #region Driving Mechanics
     private void AccelerationHelper()
@@ -280,5 +295,18 @@ public class CarController : MonoBehaviour {
             }
     }
     #endregion
+
+    void Respawn() {
+        StartCoroutine(DieAndRespawnAtLocation());
+    }
+
+    IEnumerator DieAndRespawnAtLocation() {
+        canDrive = false;
+        yield return new WaitForSeconds(deathTime);
+        
+        canDrive = true;
+        gameObject.transform.position = new Vector3(0, 4, 0);
+        gameObject.transform.rotation = new Quaternion(0, 0, 0, 0);
+    }
 
 }

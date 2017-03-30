@@ -6,6 +6,10 @@ using UnityEngine.UI;
 
 public class RocketTargetted : MonoBehaviour, IWeapon {
     [SerializeField]
+    GameObject rocketPrefab;
+    [SerializeField]
+    Transform rocketSpawnPoint;
+    [SerializeField]
     int damage;
     [SerializeField]
     float maxRange;
@@ -21,6 +25,8 @@ public class RocketTargetted : MonoBehaviour, IWeapon {
     string targetSelectRight;
     [SerializeField]
     GameObject targettingReticle;
+    [SerializeField]
+    float turnDampening;
 
     GameManager gameManager;
     private List<Transform> playerTransforms { get { return gameManager.PlayersInRound; } }
@@ -35,8 +41,11 @@ public class RocketTargetted : MonoBehaviour, IWeapon {
     bool isTargettingLeft;
     bool isShooting;
     bool isTargettingRight;
+
     enum Direction {
     left, right };
+
+
     void Awake () {
         try { gameManager = GameObject.Find("GameManager").GetComponent<GameManager>(); }
         catch (Exception) { throw new Exception("Scene must contain an object called GameManager with the GameManager script attached"); }
@@ -59,13 +68,12 @@ public class RocketTargetted : MonoBehaviour, IWeapon {
 
         if (!targetLocated)
             SetTargetToPrimary();
-        else
-            GetInput();
+        GetInput();
 	}
 
     private void GetInput() {
-        isTargettingLeft = Input.GetButtonDown(targetSelectLeft);
-        isTargettingRight = Input.GetButtonDown(targetSelectRight);
+        //isTargettingLeft = Input.GetButtonDown(targetSelectLeft);
+        //isTargettingRight = Input.GetButtonDown(targetSelectRight);
         isShooting = Input.GetButtonDown(shootButton);
     }
 
@@ -78,6 +86,18 @@ public class RocketTargetted : MonoBehaviour, IWeapon {
     private void FixedUpdate() {
         if (isTargettingLeft)
             NextTarget(Direction.left);
+        if (isShooting)
+        {
+            GameObject rocket = Instantiate(rocketPrefab, rocketSpawnPoint.position, rocketSpawnPoint.rotation) as GameObject;
+
+        }
+        if (targetLocated)
+            TurnToTarget();
+    }
+
+    private void TurnToTarget() {
+        Quaternion rotationToLockTarget = Quaternion.LookRotation(target.position);
+        transform.rotation = Quaternion.Slerp(transform.rotation, rotationToLockTarget, Time.deltaTime * turnDampening);
     }
 
     private void NextTarget(Direction direction) {
