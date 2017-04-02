@@ -19,11 +19,13 @@ public class RocketSimple : MonoBehaviour, IWeapon {
     public int Damage{ get{ return damage;}}
     public float LifeSpan{ get{ return destructTimer;}}
     public bool IsActive { get { return isActiveAndEnabled;} }
-    
+
+    GameManager gameManager;
 
     void Awake() {
+        gameManager = GameObject.Find("GameManager").GetComponent<GameManager>();
         StartCoroutine(GetComponent<IWeapon>().DestroySelf(destructTimer));
-        
+        shootingInput = "Shoot" + GetComponentInParent<CarController>().PlayerNumber;
     }
 
     IEnumerator IWeapon.DestroySelf(float LifeSpan) {
@@ -37,7 +39,8 @@ public class RocketSimple : MonoBehaviour, IWeapon {
     }
 
     private void Shoot() {
+        gameManager.PlayerShotRocket(GetComponentInParent<CarController>().PlayerNumber);
         GameObject rocket = Instantiate(rocketPrefab, rocketSpawnPoint.position, rocketSpawnPoint.rotation) as GameObject;
-        
+        rocket.transform.parent = transform;
     }
 }

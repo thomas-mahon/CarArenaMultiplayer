@@ -88,7 +88,7 @@ public class RocketTargetted : MonoBehaviour, IWeapon {
             NextTarget(Direction.left);
         if (isShooting)
         {
-            GameObject rocket = Instantiate(rocketPrefab, rocketSpawnPoint.position, rocketSpawnPoint.rotation) as GameObject;
+            Instantiate(rocketPrefab, rocketSpawnPoint.position, rocketSpawnPoint.rotation);
 
         }
         if (targetLocated)

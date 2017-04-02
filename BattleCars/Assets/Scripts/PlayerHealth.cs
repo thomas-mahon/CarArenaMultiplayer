@@ -13,20 +13,21 @@ public class PlayerHealth : MonoBehaviour {
     GameObject[] damageIndicatorPrefabs;
     [SerializeField]
     Transform vfxSpawnPoint;
-    
     [SerializeField]
     float maxHealth;
 
     GameObject showDamage;
-    DamageStatus damageStatus;
     float currentHealth;
 
 	// Use this for initialization
 	void Start () {
         currentHealth = maxHealth;
-        damageStatus = DamageStatus.none;
         showDamage = new GameObject();
 	}
+
+    public bool CheckIsAlive() {
+        return currentHealth > 0 ? true : false;
+    }
 
     public void Damage(float damage) {
         currentHealth -= damage;
@@ -75,8 +76,9 @@ public class PlayerHealth : MonoBehaviour {
 
     private void RespawnWithCarController() {
         transform.gameObject.GetComponent<CarController>().SendMessage("Respawn");
+        
         currentHealth = maxHealth;
-        damageStatus = DamageStatus.none;
+        UpdateDamageStatus(DamageStatus.none);
         Damage(0);
     }
 }

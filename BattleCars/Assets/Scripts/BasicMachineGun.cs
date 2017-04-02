@@ -5,14 +5,17 @@ public class BasicMachineGun : MonoBehaviour {
     [SerializeField]
     GameObject bullet;
     [SerializeField]
-    string shootButton;
-    [SerializeField]
     float shotTime;
 
+    GameManager gameManager;
+    string shootButton;
     bool canShoot;
 
     void Awake() {
+        gameManager = GameObject.Find("GameManager").GetComponent<GameManager>();
         canShoot = true;
+        shootButton = "Shoot" + GetComponentInParent<CarController>().PlayerNumber;
+
     }
 
     // Update is called once per frame
@@ -27,7 +30,8 @@ public class BasicMachineGun : MonoBehaviour {
     IEnumerator Shoot() {
         yield return new WaitForSeconds(shotTime);
         canShoot = true;
-        
-        Instantiate(bullet, transform.position, transform.rotation);
+        gameManager.PlayerShotMacGun(GetComponentInParent<CarController>().PlayerNumber);
+        GameObject shot = Instantiate(bullet, transform.position, transform.rotation) as GameObject;
+        shot.transform.parent = transform;
     }
 }

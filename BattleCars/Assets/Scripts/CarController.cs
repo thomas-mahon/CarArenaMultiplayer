@@ -73,6 +73,7 @@ public class CarController : MonoBehaviour {
     GameObject activeWeapon;
     int childObjectCountWithoutWeapon;
     bool canDrive;
+    GameManager gameManager;
     #endregion
 
     #region Private properties
@@ -85,9 +86,12 @@ public class CarController : MonoBehaviour {
     public int PlayerNumber = 1;
 
     void Start() {
+        try { gameManager = GameObject.Find("GameManager").GetComponent<GameManager>(); }
+        catch (Exception) { throw new Exception("Scene must contain a GameManager"); }
 
         try { rigidBody = GetComponent<Rigidbody>(); }
         catch (Exception) { throw new Exception("CarController must be attached to a GameObject with a Rigidbody component."); }
+
         rigidBody.centerOfMass = centerOfMassOffset;
         tireSidewaysStiffnessDefault = wheelsAll[0].sidewaysFriction.stiffness;
         torqueCurveModifier = new AnimationCurve(new Keyframe(0, 1), new Keyframe(maxSpeed, 0.25f));
@@ -164,7 +168,6 @@ public class CarController : MonoBehaviour {
 
     private void UpdateWheelFriction(WheelHit wheelHit) {
         WheelFrictionCurve sidewaysFrictionCurve = wheelsAll[0].sidewaysFriction;
-        WheelFrictionCurve forwardFrictionCurve = wheelsAll[3].forwardFriction;
 
         if (wheelHit.sidewaysSlip > maxSidewaysSlip || wheelHit.forwardSlip > maxForwardSlip)
             sidewaysFrictionCurve.stiffness += frictionModifier;
@@ -258,9 +261,9 @@ public class CarController : MonoBehaviour {
     #endregion
 
     void GetInput() {
-        steeringInput = Input.GetAxis("Horizontal");
-        driveInput = Input.GetAxis("Gas1");
-        brakeInput = Input.GetAxis("Brakes1");
+        steeringInput = Input.GetAxis("Steering" + PlayerNumber);
+        driveInput = Input.GetAxis("Gas" + PlayerNumber);
+        brakeInput = Input.GetAxis("Brakes" + PlayerNumber);
     }
 
     private IEnumerator TorqueIncreasePowerUp()
@@ -303,9 +306,10 @@ public class CarController : MonoBehaviour {
     IEnumerator DieAndRespawnAtLocation() {
         canDrive = false;
         yield return new WaitForSeconds(deathTime);
-        
+
+        gameManager.PlayerDied(PlayerNumber);
         canDrive = true;
-        gameObject.transform.position = new Vector3(0, 4, 0);
+        gameObject.transform.position = new Vector3(0, 10, 0);
         gameObject.transform.rotation = new Quaternion(0, 0, 0, 0);
     }
 

@@ -30,8 +30,7 @@ public class PowerUpManager : MonoBehaviour {
         {
             int prefabSelectionIndex = Random.Range(0, pickupPrefabs.ToArray().Length);
             Vector3 instantiatePosition = new Vector3(Random.Range(minXCreationBox, maxXCreationBox), 0, Random.Range(minZCreationBox, maxZCreationBox));
-
-            GameObject pickup = Instantiate(pickupPrefabs[prefabSelectionIndex], instantiatePosition, transform.rotation) as GameObject;
+            Instantiate(pickupPrefabs[prefabSelectionIndex], instantiatePosition, transform.rotation);
             dropCTR = 0;
         }
 	}
